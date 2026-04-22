@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spark — Message ideas for your person</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #0e0a0e;
+      background-image: radial-gradient(ellipse at 20% 20%, rgba(255,107,157,0.08) 0%, transparent 60%),
+                        radial-gradient(ellipse at 80% 80%, rgba(199,125,255,0.06) 0%, transparent 60%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+      font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+      color: #fff;
+    }
+    .header { text-align: center; margin-bottom: 32px; }
+    .header h1 { font-size: 32px; font-weight: 400; letter-spacing: 0.04em; margin-top: 10px; }
+    .header p { color: #555; font-size: 12px; margin-top: 6px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .usage-bar {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px; padding: 7px 16px; margin-top: 16px;
+    }
+    .dots { display: flex; gap: 5px; }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      transition: all 0.3s;
+    }
+    .dot.active { background: #FF6B9D; box-shadow: 0 0 6px #FF6B9D88; }
+    .dot.used { background: rgba(255,255,255,0.1); }
+    .usage-text { color: #777; font-size: 12px; }
+    .premium-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,107,157,0.08); border: 1px solid rgba(255,107,157,0.2);
+      border-radius: 20px; padding: 7px 16px; margin-top: 16px;
+      color: #FF6B9D; font-size: 12px;
+    }
+    .container { width: 100%; max-width: 500px; }
+    label { display: block; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; }
+    .vibes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+    .vibe-btn {
+      padding: 12px 8px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: transparent; color: #555;
+      cursor: pointer; transition: all 0.2s; text-align: center;
+      font-family: inherit;
+    }
+    .vibe-btn.active { border-color: var(--color); background: var(--bg); color: var(--color); }
+    .vibe-emoji { font-size: 20px; margin-bottom: 4px; }
+    .vibe-name { font-size: 12px; }
+    .vibe-desc { font-size: 10px; opacity: 0.65; margin-top: 2px; }
+    .contexts { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+    .ctx-btn {
+      padding: 8px 14px; border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: transparent; color: #555;
+      font-size: 13px; cursor: pointer; transition: all 0.2s;
+      white-space: nowrap; font-family: inherit;
+    }
+    .ctx-btn.active { border-color: var(--color); background: var(--bg); color: var(--color); }
+    .inputs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    input, textarea {
+      width: 100%; background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+      padding: 11px 14px; color: #ddd; font-size: 14px; font-family: inherit;
+    }
+    input:focus, textarea:focus { outline: none; }
+    textarea { resize: none; line-height: 1.5; }
+    input::placeholder, textarea::placeholder { color: #444; }
+    .generate-btn {
+      width: 100%; padding: 16px; border-radius: 16px; border: none;
+      font-size: 16px; font-family: inherit; cursor: pointer;
+      letter-spacing: 0.04em; transition: all 0.3s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .generate-btn:disabled { background: rgba(255,255,255,0.04); color: #555; cursor: not-allowed; box-shadow: none; }
+    .error-box {
+      color: #ff8080; font-size: 12px; margin-top: 14px;
+      background: rgba(255,80,80,0.07); border: 1px solid rgba(255,80,80,0.18);
+      border-radius: 10px; padding: 10px 14px; line-height: 1.6;
+    }
+    .ideas-section { margin-top: 32px; }
+    .ideas-label { color: #555; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 14px; }
+    .idea-card {
+      border-radius: 16px; padding: 18px 20px; position: relative;
+      margin-bottom: 10px; transition: transform 0.2s, box-shadow 0.2s;
+      animation: cardIn 0.4s ease both;
+    }
+    .idea-card:hover { transform: translateY(-2px); }
+    .idea-text { font-size: 13px; color: #ccc; line-height: 1.7; padding-right: 36px; }
+    .copy-btn {
+      position: absolute; top: 14px; right: 14px;
+      width: 30px; height: 30px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: transparent; color: #777;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; font-size: 14px;
+    }
+    .copy-btn.copied { color: var(--color); border-color: var(--color); background: var(--colorbg); }
+    .hint { color: #333; font-size: 12px; text-align: center; margin-top: 20px; font-style: italic; }
+    .spinner {
+      width: 18px; height: 18px; border: 2px solid #333; border-top-color: #777;
+      border-radius: 50%; display: inline-block; animation: spin 0.7s linear infinite;
+    }
+    /* Paywall */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999; padding: 20px; backdrop-filter: blur(10px);
+    }
+    .paywall {
+      background: #120810; border: 1px solid rgba(255,107,157,0.3);
+      border-radius: 24px; padding: 36px 28px; max-width: 420px; width: 100%;
+      text-align: center; box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+      animation: fadeUp 0.3s ease;
+    }
+    .paywall h2 { font-weight: 400; font-size: 21px; margin-bottom: 10px; font-family: inherit; }
+    .paywall p { color: #777; font-size: 14px; line-height: 1.65; margin-bottom: 24px; }
+    .features { background: rgba(255,107,157,0.06); border: 1px solid rgba(255,107,157,0.15); border-radius: 14px; padding: 14px 18px; margin-bottom: 24px; text-align: left; }
+    .feature { display: flex; align-items: center; gap: 10px; color: #bbb; font-size: 13px; margin-bottom: 9px; }
+    .feature:last-child { margin-bottom: 0; }
+    .feature-check { color: #FF6B9D; font-weight: 700; font-size: 15px; }
+    .plan-btns { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+    .plan-btn {
+      width: 100%; padding: 14px 20px; border-radius: 14px;
+      border: 1px solid rgba(255,107,157,0.3); background: rgba(255,107,157,0.08);
+      color: #fff; font-size: 15px; font-family: inherit; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between; transition: all 0.2s;
+    }
+    .plan-btn:hover { background: rgba(255,107,157,0.18); }
+    .plan-btn.featured {
+      background: linear-gradient(135deg, #FF6B9D, #c9547a);
+      border-color: transparent; box-shadow: 0 6px 28px rgba(255,107,157,0.4);
+    }
+    .plan-btn.featured:hover { box-shadow: 0 8px 36px rgba(255,107,157,0.6); }
+    .plan-label { color: #bbb; font-size: 14px; }
+    .plan-price { font-size: 18px; font-weight: 600; color: #FF6B9D; }
+    .plan-btn.featured .plan-price { color: #fff; }
+    .save-badge { background: #FF6B9D; color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-left: 8px; }
+    .maybe-later { background: none; border: none; color: #444; font-size: 13px; cursor: pointer; font-family: inherit; }
+    .secure-note { color: #222; font-size: 11px; margin-top: 12px; }
+    @keyframes cardIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div style="font-size:42px">💌</div>
+  <h1>Spark</h1>
+  <p>Message ideas for your person</p>
+  <div id="usageBar"></div>
+</div>
+
+<div class="container">
+  <div style="margin-bottom:24px">
+    <label>Pick a vibe</label>
+    <div class="vibes" id="vibes"></div>
+  </div>
+  <div style="margin-bottom:24px">
+    <label>When are you sending it?</label>
+    <div class="contexts" id="contexts"></div>
+  </div>
+  <div class="inputs">
+    <input type="text" id="partnerName" placeholder="Their name (optional) — e.g. Jess, babe, love..."/>
+    <textarea id="context" rows="2" placeholder="Any context? (optional) — anniversary, long distance, rough week..."></textarea>
+  </div>
+  <button class="generate-btn" id="generateBtn" onclick="generate()">✨ Get ideas</button>
+  <div id="errorBox" style="display:none" class="error-box"></div>
+  <div id="ideasSection" style="display:none" class="ideas-section">
+    <div class="ideas-label" id="ideasLabel"></div>
+    <div id="ideasList"></div>
+    <p class="hint">Not quite right? Adjust the vibe and try again.</p>
+  </div>
+</div>
+
+<div id="paywall" style="display:none" class="overlay">
+  <div class="paywall">
+    <div style="font-size:48px;margin-bottom:14px">💌</div>
+    <h2>You've used your 3 free ideas today</h2>
+    <p>Upgrade to <span style="color:#FF6B9D">Spark Premium</span> for unlimited daily ideas, all 6 vibes, and seasonal packs every month.</p>
+    <div class="features">
+      <div class="feature"><span class="feature-check">✓</span> Unlimited message ideas daily</div>
+      <div class="feature"><span class="feature-check">✓</span> All 6 vibes + seasonal packs</div>
+      <div class="feature"><span class="feature-check">✓</span> Faster AI generation</div>
+      <div class="feature"><span class="feature-check">✓</span> Cancel anytime</div>
+    </div>
+    <div class="plan-btns">
+      <button class="plan-btn" onclick="window.open('https://buy.stripe.com/fZuaEW4N42vr9zf1Fu5os00','_blank')">
+        <span class="plan-label">Monthly</span>
+        <span class="plan-price">$4.99<span style="color:#666;font-size:12px">/mo</span></span>
+      </button>
+      <button class="plan-btn featured" onclick="window.open('https://buy.stripe.com/dRm3cu2EW1rn8vbck85os01','_blank')">
+        <span style="display:flex;align-items:center;gap:8px"><span>Yearly</span><span class="save-badge">SAVE 50%</span></span>
+        <span>$29.99<span style="color:rgba(255,255,255,0.7);font-size:12px">/yr</span></span>
+      </button>
+    </div>
+    <button class="maybe-later" onclick="document.getElementById('paywall').style.display='none'">Maybe later</button>
+    <p class="secure-note">🔒 Secure checkout via Stripe · Cancel anytime</p>
+  </div>
+</div>
+
+<script>
+const FREE_LIMIT = 3;
+const VIBES = [
+  { id:"flirty",  emoji:"😏", label:"Flirty",      desc:"Teasing & playful",   color:"#FF6B9D", bg:"rgba(255,107,157,0.12)" },
+  { id:"romantic",emoji:"🌹", label:"Romantic",    desc:"Tender & loving",     color:"#E878A2", bg:"rgba(232,120,162,0.12)" },
+  { id:"spicy",   emoji:"🔥", label:"Spicy",       desc:"Bold & suggestive",   color:"#FF8C42", bg:"rgba(255,140,66,0.12)"  },
+  { id:"sweet",   emoji:"🍯", label:"Sweet",       desc:"Warm & affectionate", color:"#F7C59F", bg:"rgba(247,197,159,0.12)" },
+  { id:"cheeky",  emoji:"😈", label:"Cheeky",      desc:"Naughty & witty",     color:"#C77DFF", bg:"rgba(199,125,255,0.12)" },
+  { id:"missing", emoji:"💭", label:"Missing You", desc:"Longing & nostalgic", color:"#74B3CE", bg:"rgba(116,179,206,0.12)" },
+];
+const CONTEXTS = [
+  { id:"morning", emoji:"☀️", label:"Good Morning"   },
+  { id:"midday",  emoji:"💼", label:"During the Day" },
+  { id:"night",   emoji:"🌙", label:"Good Night"     },
+  { id:"anytime", emoji:"✨", label:"Just Because"   },
+];
+const VIBE_DESCS = {
+  flirty:"playfully flirty and teasing with light innuendo",
+  romantic:"deeply romantic, tender, and heartfelt",
+  spicy:"bold, suggestive, and a little naughty but tasteful",
+  sweet:"warm, loving, and genuinely sweet",
+  cheeky:"cheeky, witty, and naughty in a fun way",
+  missing:"longing, nostalgic, and full of desire to be together",
+};
+const CONTEXT_DESCS = {
+  morning:"to send first thing in the morning",
+  midday:"to send in the middle of the day",
+  night:"to send as a good night message",
+  anytime:"to send any time just because",
+};
+
+let selectedVibe = "flirty";
+let selectedContext = "anytime";
+let isPremium = localStorage.getItem("spark_premium") === "true";
+let usage = getUsage();
+
+function today() { return new Date().toISOString().slice(0,10); }
+function getUsage() {
+  try {
+    const r = localStorage.getItem("spark_usage");
+    if (!r) return { count:0, date:today() };
+    const p = JSON.parse(r);
+    return p.date !== today() ? { count:0, date:today() } : p;
+  } catch { return { count:0, date:today() }; }
+}
+function saveUsage(n) { localStorage.setItem("spark_usage", JSON.stringify({ count:n, date:today() })); }
+
+// Check for premium redirect
+const params = new URLSearchParams(window.location.search);
+if (params.get("premium") === "true") {
+  localStorage.setItem("spark_premium","true");
+  isPremium = true;
+  window.history.replaceState({}, "", window.location.pathname);
+}
+
+function renderUsageBar() {
+  const bar = document.getElementById("usageBar");
+  if (isPremium) {
+    bar.innerHTML = '<div class="premium-badge">✨ Premium — unlimited ideas</div>';
+    return;
+  }
+  const remaining = Math.max(0, FREE_LIMIT - usage.count);
+  const dots = VIBES.slice(0,3).map((_,i) =>
+    `<div class="dot ${i < usage.count ? 'used' : 'active'}"></div>`
+  ).join("");
+  const upgradeLink = remaining === 0 ? ' <button onclick="document.getElementById(\'paywall\').style.display=\'flex\'" style="background:none;border:none;color:#FF6B9D;font-size:12px;cursor:pointer;font-family:inherit;padding:0">Upgrade ✨</button>' : "";
+  bar.innerHTML = `<div class="usage-bar"><div class="dots">${dots}</div><span class="usage-text">${remaining > 0 ? remaining + " free " + (remaining===1?"idea":"ideas") + " left today" : "Daily limit reached —"}${upgradeLink}</span></div>`;
+}
+
+function renderVibes() {
+  const sv = VIBES.find(v => v.id === selectedVibe);
+  document.getElementById("vibes").innerHTML = VIBES.map(v => `
+    <button class="vibe-btn ${v.id === selectedVibe ? 'active' : ''}" 
+      style="--color:${v.color};--bg:${v.bg}"
+      onclick="selectVibe('${v.id}')">
+      <div class="vibe-emoji">${v.emoji}</div>
+      <div class="vibe-name">${v.label}</div>
+      <div class="vibe-desc">${v.desc}</div>
+    </button>
+  `).join("");
+}
+
+function renderContexts() {
+  const sv = VIBES.find(v => v.id === selectedVibe);
+  document.getElementById("contexts").innerHTML = CONTEXTS.map(c => `
+    <button class="ctx-btn ${c.id === selectedContext ? 'active' : ''}"
+      style="--color:${sv.color};--bg:${sv.bg}"
+      onclick="selectContext('${c.id}')">
+      ${c.emoji} ${c.label}
+    </button>
+  `).join("");
+}
+
+function renderGenerateBtn() {
+  const sv = VIBES.find(v => v.id === selectedVibe);
+  const btn = document.getElementById("generateBtn");
+  const isLocked = !isPremium && usage.count >= FREE_LIMIT;
+  if (isLocked) {
+    btn.textContent = "🔒 Upgrade to generate more";
+    btn.style.background = "rgba(255,255,255,0.05)";
+    btn.style.color = "#555";
+    btn.style.boxShadow = "none";
+  } else {
+    btn.innerHTML = `✨ Get ${sv.emoji} ${sv.label} ideas`;
+    btn.style.background = `linear-gradient(135deg, ${sv.color}, ${sv.color}bb)`;
+    btn.style.color = "#fff";
+    btn.style.boxShadow = `0 6px 30px ${sv.color}40`;
+  }
+}
+
+function selectVibe(id) { selectedVibe = id; renderVibes(); renderContexts(); renderGenerateBtn(); }
+function selectContext(id) { selectedContext = id; renderContexts(); }
+
+async function generate() {
+  const isLocked = !isPremium && usage.count >= FREE_LIMIT;
+  if (isLocked) { document.getElementById("paywall").style.display = "flex"; return; }
+
+  const btn = document.getElementById("generateBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Crafting ideas...';
+  btn.style.background = "rgba(255,255,255,0.04)";
+  btn.style.color = "#555";
+  btn.style.boxShadow = "none";
+  document.getElementById("errorBox").style.display = "none";
+  document.getElementById("ideasSection").style.display = "none";
+
+  const name = document.getElementById("partnerName").value;
+  const ctx = document.getElementById("context").value;
+  const sv = VIBES.find(v => v.id === selectedVibe);
+
+  const parts = [
+    "Generate 5 short text messages that are " + VIBE_DESCS[selectedVibe] + ", " + CONTEXT_DESCS[selectedContext] + ".",
+    "These are real messages someone will copy and send to their romantic partner.",
+  ];
+  if (name) parts.push("Their partner's name is " + name + ".");
+  if (ctx) parts.push("Extra context: " + ctx);
+  parts.push("Keep each 1-3 sentences. Vary the style. Feel natural, not AI-generated.");
+  parts.push("Respond with ONLY a JSON array of 5 strings. No markdown. No explanation. Just the array.");
+
+  try {
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5",
+        max_tokens: 1000,
+        system: "You help couples write sweet, flirty, and romantic messages. Respond only with a valid JSON array of strings. No markdown fences, no explanation, nothing else.",
+        messages: [{ role: "user", content: parts.join(" ") }],
+      }),
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    const raw = (data.content || []).filter(c => c.type === "text").map(c => c.text).join("");
+    const match = raw.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error("Unexpected response: " + raw.slice(0,100));
+    const ideas = JSON.parse(match[0]);
+    if (!Array.isArray(ideas) || !ideas.length) throw new Error("No messages returned.");
+
+    document.getElementById("ideasLabel").textContent = sv.emoji + " " + sv.label + " messages — tap to copy";
+    document.getElementById("ideasList").innerHTML = ideas.map((idea, i) => `
+      <div class="idea-card" style="background:${sv.bg};border:1px solid ${sv.color}30;animation-delay:${i*0.08}s" 
+           onmouseenter="this.style.boxShadow='0 8px 30px ${sv.color}25'" 
+           onmouseleave="this.style.boxShadow=''">
+        <div class="idea-text">${idea}</div>
+        <button class="copy-btn" style="--color:${sv.color};--colorbg:${sv.color}22" 
+                onclick="copyIdea(this, '${idea.replace(/'/g, "\\'")}', '${sv.color}')">⧉</button>
+      </div>
+    `).join("");
+    document.getElementById("ideasSection").style.display = "block";
+
+    if (!isPremium) {
+      usage.count += 1;
+      saveUsage(usage.count);
+      renderUsageBar();
+    }
+  } catch(e) {
+    const errBox = document.getElementById("errorBox");
+    errBox.textContent = "⚠️ " + (e.message || String(e));
+    errBox.style.display = "block";
+  }
+
+  btn.disabled = false;
+  renderGenerateBtn();
+}
+
+function copyIdea(btn, text, color) {
+  navigator.clipboard.writeText(text);
+  btn.textContent = "✓";
+  btn.classList.add("copied");
+  setTimeout(() => { btn.textContent = "⧉"; btn.classList.remove("copied"); }, 2000);
+}
+
+// Init
+renderUsageBar();
+renderVibes();
+renderContexts();
+renderGenerateBtn();
+</script>
+</body>
+</html>
